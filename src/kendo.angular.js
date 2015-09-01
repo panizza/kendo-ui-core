@@ -437,21 +437,23 @@ var __meta__ = {
 		if (!(kendo.ui.AutoComplete && widget instanceof kendo.ui.AutoComplete)) {
 			widget.first("dataBound", onChange(true));
 		}
+		
+		setTimeout(function() {
+			var currentVal = value();
 
-        var currentVal = value();
+			// if the model value is undefined, then we set the widget value to match ( == null/undefined )
+			// In telerik/kendo-ui-core#1027 we discovered that after the timeout the $viewValue arives as NaN in some weird, default form.
+			// Hence the check below.
+			if (!isNaN(ngModel.$viewValue) && currentVal != ngModel.$viewValue) {
+				if (!ngModel.$isEmpty(ngModel.$viewValue)) {
+					widget.value(ngModel.$viewValue);
+				} else if (currentVal != null && currentVal !== "" && currentVal != ngModel.$viewValue) {
+					ngModel.$setViewValue(currentVal);
+				}
+			}
 
-        // if the model value is undefined, then we set the widget value to match ( == null/undefined )
-        // In telerik/kendo-ui-core#1027 we discovered that after the timeout the $viewValue arives as NaN in some weird, default form.
-        // Hence the check below.
-        if (!isNaN(ngModel.$viewValue) && currentVal != ngModel.$viewValue) {
-            if (!ngModel.$isEmpty(ngModel.$viewValue)) {
-                widget.value(ngModel.$viewValue);
-            } else if (currentVal != null && currentVal !== "" && currentVal != ngModel.$viewValue) {
-                ngModel.$setViewValue(currentVal);
-            }
-        }
-
-        ngModel.$setPristine();
+			ngModel.$setPristine();
+		}, 0);
     }
 
     function bindToKNgModel(widget, scope, kNgModel) {
